@@ -60,6 +60,9 @@ void KernelStart(char *cmd_args[], unsigned int pmem_size, UserContext *uctxt) {
   int num_kstack_start_page = UP_TO_PAGE(KERNEL_STACK_BASE - PMEM_BASE) / PAGESIZE;
   int num_total_kernel_pages = UP_TO_PAGE(VMEM_0_SIZE) / PAGESIZE;
 
+  TracePrintf(1, "Number of ktext pages: %d\n", num_ktext_pages);
+  TracePrintf(1, "Number of kdata pages: %d\n", num_kdata_pages);
+  TracePrintf(1, "Number of kstack pages: %d\n", num_kstack_start_page);
   TracePrintf(1, "Total number of kernel pages: %d\n", num_total_kernel_pages);
   for (int pageind = 0; pageind < frame_table_size; pageind++) {
     addr = (int *) (PMEM_BASE + PAGESIZE * pageind);
@@ -140,7 +143,7 @@ void KernelStart(char *cmd_args[], unsigned int pmem_size, UserContext *uctxt) {
   int num_kernel_stack_pages = num_total_kernel_pages - num_kstack_start_page;
   pte_t *kernel_stack = malloc(sizeof(pte_t) *num_kernel_stack_pages);
   for (int i=0; i<num_kernel_stack_pages; i++) {
-    kernel_stack[i] = region_0_page_table[i];
+    kernel_stack[i] = region_0_page_table[i+num_kstack_start_page];
   }
 
   // set up region 1 page table
