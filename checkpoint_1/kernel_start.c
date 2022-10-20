@@ -156,19 +156,20 @@ void KernelStart(char *cmd_args[], unsigned int pmem_size, UserContext *uctxt) {
     // our loop shouldn't use any memory)
     if (ind < page_table_reg_1_size - idle_stack_size) {
       idle_page.valid = 0;
-      region_1_page_table[ind] = kernel_page;  
+      region_1_page_table[ind] = idle_page;
     }
     // Here's the stack
+    // TODO -- why are we setting the STACK to be idle?
     else {
       idle_page.valid = 1;
       idle_page.prot = (PROT_READ | PROT_WRITE);
       idle_page.pfn = 300 + ind; //TODO: change this
-      region_1_page_table[ind] = kernel_page; 
+      region_1_page_table[ind] = idle_page;
     }
   }
   
   KernelContext kctxt;
-  uctxt -> pc = &DoIdle;
+  uctxt -> pc = &DoIdle;                        // TODO -- &DoIdle should be in kernel text, right?
   uctxt -> sp = &region_1_page_table[page_table_reg_1_size - (idle_stack_size + 1)];
   uctxt -> ebp =&region_1_page_table[page_table_reg_1_size - 1]; 
   int pid = helper_new_pid(region_1_page_table);
