@@ -64,6 +64,7 @@ void KernelStart(char *cmd_args[], unsigned int pmem_size, UserContext *uctxt) {
   TracePrintf(1, "Number of kdata pages: %d\n", num_kdata_pages);
   TracePrintf(1, "Number of kstack pages: %d\n", num_kstack_start_page);
   TracePrintf(1, "Total number of kernel pages: %d\n", num_total_kernel_pages);
+
   for (int pageind = 0; pageind < frame_table_size; pageind++) {
     addr = (int *) (PMEM_BASE + PAGESIZE * pageind);
     // Kernel text is implied to exist from the physical base (NULL) until kernel data begins
@@ -148,27 +149,57 @@ void KernelStart(char *cmd_args[], unsigned int pmem_size, UserContext *uctxt) {
 
   // set up region 1 page table
   int idle_stack_size = 2;
-  pte_t idle_page;
+  pte_t user_page;
   int page_table_reg_1_size = UP_TO_PAGE(VMEM_1_SIZE) >> PAGESHIFT;
   pte_t *region_1_page_table = malloc(sizeof(pte_t) * page_table_reg_1_size);
+
+  // calculate where DoIdle is, because we need to copy those frames over
+  int do_idle_loc = &DoIdle;
+  int end_of_do_idle = &EndOfDoIdle;
+  TracePrintf(1, "Do Idle Loc: %d\n", do_idle_loc);
+  TracePrintf(1, "Do Idle End: %d\n", end_of_do_idle);
+
   for (int ind=0; ind<page_table_reg_1_size; ind++) {
     // set everything under the stack as non-valid (since the text is in the kernel and 
     // our loop shouldn't use any memory)
     if (ind < page_table_reg_1_size - idle_stack_size) {
-      idle_page.valid = 0;
-      region_1_page_table[ind] = idle_page;
+      user_page.valid = 0;
+      region_1_page_table[ind] = user_page;
     }
     // Here's the stack
     // TODO -- why are we setting the STACK to be idle?
     else {
-      idle_page.valid = 1;
-      idle_page.prot = (PROT_READ | PROT_WRITE);
-      idle_page.pfn = 300 + ind; //TODO: change this
-      region_1_page_table[ind] = idle_page;
+      int stack_page_index = ind + num_total_kernel_pages; // TODO -- make sure this isn't still in the kernel...
+
+      user_page.valid = 1;
+      user_page.prot = (PROT_READ | PROT_WRITE);
+      user_page.pfn = stack_page_index;             //TODO: is this right? We want fresh mem for user stack!
+      region_1_page_table[ind] = user_page;
+      frame_table[stack_page_index] = 1;    // set the frame table as having this frame occupied
+    }
+  }
+
+  // TODO -- swap in &DoIdle
+  int do_idle_frame_id = do_idle_loc >> PAGESHIFT + 1;         // TODO -- is the +1 right?
+  int do_idle_end_frame_id = end_of_do_idle >> PAGESHIFT + 1;
+  int diff = do_idle_end_frame_id-do_idle_frame_id;
+  // if we're in the same frame, make sure to allocate at least one
+  if (diff == 0) {
+    diff = 1;
+  }
+
+  for (int ind=0; ind < diff; ind++) {
+    int page_loc = ind + do_idle_frame_id;
+    // map the memory in userland to the same underlying frames for those locations in the kernel
+    user_page.valid = 1;
+    user_page.prot = (PROT_READ | PROT_WRITE);
+    user_page.pfun = page_loc;
+    if (frame_table[page_loc] != 1) {
+      TracePrintf(1, "Attempting to map page %d for the idle process, but it doesn't exist yet!\n", page_loc);
     }
   }
   
-  KernelContext kctxt;
+  KernelContext kctxt;                          // TODO -- does this require anything else (registers ...?)
   uctxt -> pc = &DoIdle;                        // TODO -- &DoIdle should be in kernel text, right?
   uctxt -> sp = &region_1_page_table[page_table_reg_1_size - (idle_stack_size + 1)];
   uctxt -> ebp =&region_1_page_table[page_table_reg_1_size - 1]; 
@@ -218,3 +249,5 @@ void DoIdle(void) {
     Pause();
   } 
 }
+// a hack... HOPEFULLY will be contiguous memory!
+void EndOfDoIdle(void) {};
