@@ -7,7 +7,10 @@
 
 
 # Where's your kernel source?
-K_SRC_DIR = /home/cs58/vbs/yalnix_test/current_chungus/checkpoint_1
+# UHURU SRC
+#K_SRC_DIR = /home/cs58/vbs/yalnix_test/current_chungus/checkpoint_1
+# ELLIOT SRC
+K_SRC_DIR = /media/sf_cs58/current_chungus/checkpoint_1
 
 # What are the kernel c and include files?
 K_SRCS = kernel_start.c data_structures/pcb.c data_structures/queue.c trap_handlers/trap_handlers.c syscalls/process_syscalls.c
@@ -32,9 +35,10 @@ KERNEL_ALL = yalnix
 
 # Automatically generate the list of sources, objects, and includes for the kernek
 KERNEL_SRCS = $(K_SRCS:%=$(K_SRC_DIR)/%)
-KERNEL_OBJS = $(KERNEL_SRCS:%.c=%.o) 
-KERNEL_INCS = $(K_INCS:%=$(K_SRC_DIR)/%) 
+KERNEL_OBJS = $(KERNEL_SRCS:%.c=%.o)
+KERNEL_INCS = $(K_INCS:%=$(K_SRC_DIR)/%)
 
+$(info $$KERNEL_OBJS is [${KERNEL_OBJS}])
 
 # Automatically generate the list of apps, sources, objects, and includes for your userland coden
 USER_SRCS = $(U_SRCS:%=$(U_SRC_DIR)/%)

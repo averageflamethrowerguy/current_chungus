@@ -31,5 +31,6 @@ int SetKernelBrk(void *addr);
 
 // "user text" for our idle PCB
 void DoIdle(void);
+void EndOfDoIdle(void);
 
 #endif //CURRENT_CHUNGUS_KERNEL_START_H
