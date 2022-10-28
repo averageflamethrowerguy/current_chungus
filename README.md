@@ -30,6 +30,9 @@ Usage: ./yalnix or ./yalnix -W
     ```
     ./yalnix ./checkpoint_1/test_processes/delay_test
     ```
+    This program will delay twice for 3 ticks each, then once for 0 ticks, and then loop indefinitely. You should be able
+    to observe proper behavior in the clock trap by watching for the user program's print (i.e., "Delaying for 3 Clocks"),
+    and then the clock trap's print, i.e., "TRAP_CLOCK/DELAY: Remaining Ticks: 1"
 
 ### Brk Test
     ```
