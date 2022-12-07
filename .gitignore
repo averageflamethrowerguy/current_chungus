@@ -1,0 +1,17 @@
+DISK
+TRACE
+TTYLOG*
+yalnix
+*.o
+src/test_processes/*[^*.c]
+!src/test_processes/class_tests
+src/test_processes/class_tests/*[^*.c]
+!src/test_processes/fork_exec_wait_tests
+src/test_processes/fork_exec_wait_tests/*[^*.c]
+!src/test_processes/pipe_lock_cvar_tests
+src/test_processes/pipe_lock_cvar_tests/*[^*.c]
+!src/test_processes/tty_tests
+src/test_processes/tty_tests/*[^*.c]
+.DS_Store
+.vscode/
+src/test_processes/iterator
